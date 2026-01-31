@@ -53,6 +53,9 @@ voice_agent/
 │   └── mock_db.py
 ├── services/                  # Orchestration services
 │   └── orchestrator.py       # Main conversation coordinator
+├── config.py                  # Environment configuration
+├── .env.example              # Environment variables template
+├── .env                      # Local environment (git-ignored)
 ├── main.py                    # CLI entry point
 └── README.md
 ```
@@ -71,12 +74,20 @@ voice_agent/
 cd /Users/sankar/projects/voice_agent
 ```
 
-2. Install dependencies (if any are added):
+2. Set up environment (optional - works with defaults):
+```bash
+cp .env.example .env
+# Edit .env to add API keys when needed
+```
+
+**Note:** The system works immediately with mock APIs - no API keys needed for development!
+
+3. Install dependencies (if any are added):
 ```bash
 uv sync
 ```
 
-3. Run the application:
+4. Run the application:
 ```bash
 python main.py
 ```
@@ -85,6 +96,8 @@ Or with uv:
 ```bash
 uv run python main.py
 ```
+
+For environment setup details, see [ENV_SETUP.md](ENV_SETUP.md)
 
 ## 💡 Usage
 
