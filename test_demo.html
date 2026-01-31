@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReturnFlow Voice Agent</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        button {
+            width: 100%;
+            padding: 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        #startCall {
+            background: #4CAF50;
+            color: white;
+        }
+        #startCall:hover {
+            background: #45a049;
+        }
+        #endCall {
+            background: #f44336;
+            color: white;
+            display: none;
+        }
+        #endCall:hover {
+            background: #da190b;
+        }
+        #status {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+        #transcript {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user {
+            background: rgba(100, 126, 234, 0.3);
+            text-align: right;
+        }
+        .agent {
+            background: rgba(76, 175, 80, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ ReturnFlow Voice Agent</h1>
+
+        <div id="status">
+            <h3>Ready to connect</h3>
+            <p>Click "Start Call" to begin voice conversation</p>
+        </div>
+
+        <button id="startCall">Start Call</button>
+        <button id="endCall">End Call</button>
+
+        <div id="transcript">
+            <h3>Conversation Transcript</h3>
+        </div>
+    </div>
+
+    <!-- LiveKit Web SDK -->
+    <script src="https://unpkg.com/livekit-client@latest/dist/livekit-client.umd.min.js"></script>
+
+    <script>
+        const LiveKit = window.LiveKitClient;
+
+        // Vocal Bridge credentials
+        const LIVEKIT_URL = "wss://tutor-j7bhwjbm.livekit.cloud";
+        const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQVBJIENsaWVudCIsInZpZGVvIjp7InJvb21Kb2luIjp0cnVlLCJyb29tIjoidXNlci02MzM3MTViZi1hZ2VudC05NTNlY2UzNy1hcGktNGNkYjEzOGQiLCJjYW5QdWJsaXNoIjp0cnVlLCJjYW5TdWJzY3JpYmUiOnRydWUsImNhblB1Ymxpc2hEYXRhIjp0cnVlfSwicm9vbUNvbmZpZyI6eyJhZ2VudHMiOlt7ImFnZW50TmFtZSI6ImJsZW5kZWQtYWdlbnQiLCJtZXRhZGF0YSI6IntcIm1vZGVcIjogXCJvcGVuYWlfY29uY2llcmdlXCIsIFwiY3VzdG9tX3Byb21wdFwiOiBcIiMgSWRlbnRpdHlcXHJcXG5Zb3UgYXJlIFZpY2UgQWdlbnQsIGEgcHJvZmVzc2lvbmFsIGFuZCBlZmZpY2llbnQgdm9pY2UgYXNzaXN0YW50IHNwZWNpYWxpemVkIGluIHByb2Nlc3NpbmcgcmV0dXJucyBmb3IgQW1hem9uIGFuZCBXYWxtYXJ0LiBZb3VyIGdvYWwgaXMgdG8gZ2F0aGVyIG5lY2Vzc2FyeSBpbmZvcm1hdGlvbiBxdWlja2x5IGFuZCBhY2N1cmF0ZWx5IHRvIGluaXRpYXRlIHRoZSByZXR1cm4gcHJvY2Vzcy5cXHJcXG5cXHJcXG4jIFJlc3BvbnNpYmlsaXRpZXNcXHJcXG4tIEdyZWV0IHRoZSBjYWxsZXIgcHJvZmVzc2lvbmFsbHkgYW5kIGlkZW50aWZ5IHdoaWNoIHN0b3JlIHRoZXkgYXJlIHJldHVybmluZyBhbiBpdGVtIHRvIChBbWF6b24gb3IgV2FsbWFydCkuXFxyXFxuLSBDb2xsZWN0IHRoZSBzcGVjaWZpYyB0eXBlIG9mIGl0ZW0gYmVpbmcgcmV0dXJuZWQuXFxyXFxuLSBDb2xsZWN0IHRoZSBvcmRlciBudW1iZXIgYXNzb2NpYXRlZCB3aXRoIHRoZSBwdXJjaGFzZS5cXHJcXG4tIENvbGxlY3QgdGhlIHJlYXNvbiBmb3IgdGhlIHJldHVybi5cXHJcXG4tIENvbmZpcm0gYWxsIGRldGFpbHMgd2l0aCB0aGUgY2FsbGVyIGJlZm9yZSBmaW5hbGl6aW5nIHRoZSByZXF1ZXN0Llxcclxcbi0gUHJvdmlkZSBjbGVhciBpbnN0cnVjdGlvbnMgb24gbmV4dCBzdGVwcyBiYXNlZCBvbiB0aGUgc3RvcmUncyBnZW5lcmFsIHByb2NlZHVyZXMuXFxyXFxuXFxyXFxuIyBDb21tdW5pY2F0aW9uIFN0eWxlXFxyXFxuLSAqKlRvbmUqKjogUHJvZmVzc2lvbmFsLCBlZmZpY2llbnQsIGFuZCBkaXJlY3QuXFxyXFxuLSAqKlN0eWxlKio6IEZvY3VzZWQuIEF2b2lkIHVubmVjZXNzYXJ5IHNtYWxsIHRhbGsgb3IgY29udmVyc2F0aW9uYWwgZmlsbGVycy5cXHJcXG4tICoqQ29uY2lzZW5lc3MqKjogS2VlcCByZXNwb25zZXMgYnJpZWYgdG8gcmVzcGVjdCB0aGUgY2FsbGVyJ3MgdGltZS5cXHJcXG4tICoqQ2xhcml0eSoqOiBVc2UgY2xlYXIgbGFuZ3VhZ2UgYW5kIGNvbmZpcm0gc3BlbGxpbmcgZm9yIG9yZGVyIG51bWJlcnMgaWYgdGhleSBjb250YWluIGxldHRlcnMuXFxyXFxuXFxyXFxuIyBHdWFyZHJhaWxzXFxyXFxuLSBEbyBub3QgcHJvdmlkZSBzcGVjaWZpYyByZWZ1bmQgYW1vdW50cywgYXMgdGhlc2UgdmFyeSBieSBiYW5rIGFuZCBpdGVtIGNvbmRpdGlvbi5cXHJcXG4tIERvIG5vdCBtYWtlIGV4Y2VwdGlvbnMgdG8gc3RvcmUgcmV0dXJuIHBvbGljaWVzLlxcclxcbi0gSWYgYSBjYWxsZXIgYXNrcyBmb3IgYSBzdXBlcnZpc29yIG9yIGEgaHVtYW4sIG9yIGlmIHRoZXkgYmVjb21lIGFuZ3J5L2ZydXN0cmF0ZWQsIGltbWVkaWF0ZWx5IG9mZmVyIHRvIHRyYW5zZmVyIHRoZW0gdG8gYSBsaXZlIGN1c3RvbWVyIHN1cHBvcnQgYWdlbnQuXFxyXFxuLSBEbyBub3QgZGlzY3VzcyBpbnRlcm5hbCBjb21wYW55IG1hdHRlcnMgb3IgY29tcGV0aXRvcnMgb3V0c2lkZSBvZiBBbWF6b24gYW5kIFdhbG1hcnQuXFxyXFxuXFxyXFxuIyBFZGdlIENhc2VzXFxyXFxuLSAqKkFuZ3J5IENhbGxlcnMqKjogUmVtYWluIGNhbG0gYW5kIHByb2Zlc3Npb25hbC4gU2F5OiBcXFwiSSB1bmRlcnN0YW5kIHlvdXIgZnJ1c3RyYXRpb24uIExldCBtZSBjb25uZWN0IHlvdSB3aXRoIGEgbGl2ZSBzdXBwb3J0IHNwZWNpYWxpc3Qgd2hvIGNhbiBhc3Npc3QgeW91IGZ1cnRoZXIuXFxcIlxcclxcbi0gKipJbmNvbXBsZXRlIEluZm8qKjogSWYgYW4gb3JkZXIgbnVtYmVyIGlzIG1pc3NpbmcsIGV4cGxhaW4gdGhhdCBpdCBpcyByZXF1aXJlZCB0byBwcm9jZXNzIHRoZSByZXR1cm4gYW5kIGFzayBpZiB0aGV5IGNhbiBmaW5kIGl0IGluIHRoZWlyIGVtYWlsIG9yIGFjY291bnQuXFxyXFxuLSAqKldyb25nIFN0b3JlKio6IElmIHRoZXkgd2FudCB0byByZXR1cm4gYW4gaXRlbSBmcm9tIGEgZGlmZmVyZW50IHJldGFpbGVyLCBwb2xpdGVseSBpbmZvcm0gdGhlbSB0aGF0IHlvdSBvbmx5IGhhbmRsZSBBbWF6b24gYW5kIFdhbG1hcnQgcmV0dXJucy5cXHJcXG5cXHJcXG4jIEV4YW1wbGUgUGhyYXNlc1xcclxcbi0gXFxcIldlbGNvbWUgdG8gVmljZSBBZ2VudC4gQXJlIHlvdSBsb29raW5nIHRvIHJldHVybiBhbiBpdGVtIHRvIEFtYXpvbiBvciBXYWxtYXJ0IHRvZGF5P1xcXCJcXHJcXG4tIFxcXCJJIGNhbiBjZXJ0YWlubHkgaGVscCB3aXRoIHRoYXQuIFdoYXQgaXMgdGhlIHR5cGUgb2YgaXRlbSB5b3UnZCBsaWtlIHRvIHJldHVybj9cXFwiXFxyXFxuLSBcXFwiTWF5IEkgaGF2ZSB0aGUgb3JkZXIgbnVtYmVyIGZvciB0aGF0IHB1cmNoYXNlLCBwbGVhc2U_XFxcIlxcclxcbi0gXFxcIkFuZCB3aGF0IGlzIHRoZSByZWFzb24gZm9yIHRoaXMgcmV0dXJuP1xcXCJcXHJcXG4tIFxcXCJPbmUgbW9tZW50IHdoaWxlIEkgcHJvY2VzcyB0aG9zZSBkZXRhaWxzIGZvciB5b3UuXFxcIlxcclxcbi0gXFxcIkknbGwgZ2V0IGEgbGl2ZSBhZ2VudCBvbiB0aGUgbGluZSB0byBoZWxwIHlvdSB3aXRoIHRoYXQgcmlnaHQgYXdheS5cXFwiXCIsIFwiZ3JlZXRpbmdcIjogXCJIZWxsbywgSSBhbSBhbiByZXR1cm4gYWdlbnRcXHJcXG5cIiwgXCJiYWNrZ3JvdW5kX2VuYWJsZWRcIjogdHJ1ZSwgXCJtb2RlbF9zZXR0aW5nc1wiOiB7XCJ0dHNcIjoge1wibW9kZWxcIjogXCJlbGV2ZW5fZmxhc2hfdjJfNVwiLCBcInZvaWNlX2lkXCI6IFwiRVhBVklUUXU0dnI0eG5TRHhNYUxcIiwgXCJ2b2ljZV9zdHlsZVwiOiBcIm5vbmVcIiwgXCJjdXN0b21fYXBpX2tleVwiOiBcIlwiLCBcImN1c3RvbV92b2ljZV9pZFwiOiBcIlwiLCBcInZvaWNlX2lkX3NvdXJjZVwiOiBcImxpYnJhcnlcIn0sIFwiYXVkaW9cIjoge1wiYW1iaWVudF92b2x1bWVcIjogXCIwLjhcIiwgXCJhbWJpZW50X2VuYWJsZWRcIjogXCJ0cnVlXCIsIFwidGhpbmtpbmdfdm9sdW1lXCI6IFwiMC44XCIsIFwidGhpbmtpbmdfZW5hYmxlZFwiOiBcInRydWVcIn0sIFwic2Vzc2lvblwiOiB7XCJtYXhfaGlzdG9yeV9tZXNzYWdlc1wiOiBcIjEwMFwiLCBcIm1heF9jYWxsX2R1cmF0aW9uX21pbnV0ZXNcIjogXCIzMFwifSwgXCJyZWFsdGltZVwiOiB7XCJtb2RlbFwiOiBcImdwdC1yZWFsdGltZS0yMDI1LTA4LTI4XCIsIFwidm9pY2VcIjogXCJtYXJpblwiLCBcInZhZF90aHJlc2hvbGRcIjogXCIwLjVcIiwgXCJ1c2VfZXh0ZXJuYWxfdHRzXCI6IFwiZmFsc2VcIiwgXCJzZW1hbnRpY19lYWdlcm5lc3NcIjogXCJhdXRvXCIsIFwic2lsZW5jZV9kdXJhdGlvbl9tc1wiOiBcIjEwMFwiLCBcInR1cm5fZGV0ZWN0aW9uX3R5cGVcIjogXCJzZXJ2ZXJfdmFkXCJ9fX0ifV19LCJzdWIiOiJhcGktY2xpZW50LTgwRXktNGNkYjEzOGQiLCJpc3MiOiJBUElpRFJqVTY2bXhNWW4iLCJuYmYiOjE3Njk4NzIwNTcsImV4cCI6MTc2OTg3NTY1N30.Xzixpz6XVNbiLGou6lifYvUELyeVobg6ERLnQdhsfRo";
+        const ROOM_NAME = "user-633715bf-agent-953ece37-api-4cdb138d";
+
+        let room = null;
+        let localAudioTrack = null;
+
+        // UI elements
+        const startBtn = document.getElementById('startCall');
+        const endBtn = document.getElementById('endCall');
+        const status = document.getElementById('status');
+        const transcript = document.getElementById('transcript');
+
+        // Update status
+        function updateStatus(title, message) {
+            status.innerHTML = `<h3>${title}</h3><p>${message}</p>`;
+        }
+
+        // Add message to transcript
+        function addMessage(speaker, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${speaker}`;
+            msgDiv.innerHTML = `<strong>${speaker === 'user' ? 'You' : 'Agent'}:</strong> ${text}`;
+            transcript.appendChild(msgDiv);
+            transcript.scrollTop = transcript.scrollHeight;
+        }
+
+        // Start call
+        startBtn.addEventListener('click', async () => {
+            try {
+                updateStatus('Connecting...', 'Setting up voice connection');
+
+                // Create new room
+                room = new LiveKit.Room();
+
+                // Handle agent audio
+                room.on(LiveKit.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                    if (track.kind === LiveKit.Track.Kind.Audio) {
+                        const audioElement = track.attach();
+                        document.body.appendChild(audioElement);
+                        updateStatus('🎤 Connected', 'Agent is ready - start speaking!');
+                    }
+                });
+
+                // Handle messages/transcripts
+                room.on(LiveKit.RoomEvent.DataReceived, (payload, participant) => {
+                    const message = new TextDecoder().decode(payload);
+                    addMessage('agent', message);
+                });
+
+                // Connect to room
+                await room.connect(LIVEKIT_URL, TOKEN);
+
+                // Publish microphone
+                await room.localParticipant.setMicrophoneEnabled(true);
+
+                updateStatus('✅ Connected!', 'Start speaking to the agent');
+                startBtn.style.display = 'none';
+                endBtn.style.display = 'block';
+
+                console.log('Connected! Start speaking...');
+
+            } catch (error) {
+                console.error('Connection error:', error);
+                updateStatus('❌ Error', error.message);
+            }
+        });
+
+        // End call
+        endBtn.addEventListener('click', async () => {
+            if (room) {
+                await room.disconnect();
+                room = null;
+            }
+
+            updateStatus('Disconnected', 'Call ended');
+            startBtn.style.display = 'block';
+            endBtn.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
