@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocal Bridge Voice Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .status p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 0;
+        }
+
+        #getCredentials {
+            background: #667eea;
+            color: white;
+        }
+
+        #getCredentials:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #startCall {
+            background: #4CAF50;
+            color: white;
+            display: none;
+        }
+
+        #startCall:hover:not(:disabled) {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        #endCall {
+            background: #f44336;
+            color: white;
+            display: none;
+        }
+
+        #endCall:hover:not(:disabled) {
+            background: #da190b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .log {
+            background: #2d3748;
+            color: #a0aec0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+        }
+
+        .log-time {
+            color: #718096;
+        }
+
+        .log-info {
+            color: #4299e1;
+        }
+
+        .log-success {
+            color: #48bb78;
+        }
+
+        .log-error {
+            color: #f56565;
+        }
+
+        .log-warning {
+            color: #ed8936;
+        }
+
+        .credentials {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+            font-size: 12px;
+        }
+
+        .credentials h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .credentials code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Vocal Bridge Test</h1>
+        <p class="subtitle">Live Voice Agent Testing</p>
+
+        <div class="status" id="status">
+            <h3 id="statusTitle">Ready to Test</h3>
+            <p id="statusMessage">Click "Get Credentials" to start</p>
+        </div>
+
+        <button id="getCredentials" onclick="getCredentials()">
+            Step 1: Get Credentials
+        </button>
+
+        <div class="credentials" id="credentialsDisplay"></div>
+
+        <button id="startCall" onclick="startCall()">
+            Step 2: Start Voice Call
+        </button>
+
+        <button id="endCall" onclick="endCall()">
+            End Call
+        </button>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <!-- LiveKit Web SDK -->
+    <script src="https://unpkg.com/livekit-client@latest/dist/livekit-client.umd.min.js"></script>
+
+    <script>
+        const LiveKit = window.LiveKitClient;
+
+        let credentials = null;
+        let room = null;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+
+            const typeClass = `log-${type}`;
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${typeClass}">${message}</span>`;
+
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(title, message) {
+            document.getElementById('statusTitle').textContent = title;
+            document.getElementById('statusMessage').textContent = message;
+        }
+
+        async function getCredentials() {
+            log('Requesting Vocal Bridge credentials...', 'info');
+            updateStatus('⏳ Loading', 'Contacting Vocal Bridge API...');
+
+            const btn = document.getElementById('getCredentials');
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+
+            try {
+                const API_KEY = 'vb_iHqvM80Ey1o8HqNxZn19w4o6o-0h8LDQuRgZQxQ6wcw';
+                const API_URL = 'https://vocalbridgeai.com/api/v1/token';
+
+                log(`API URL: ${API_URL}`, 'info');
+                log(`API Key: ${API_KEY.substring(0, 10)}...`, 'info');
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                log(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}: ${response.statusText}`);
+                }
+
+                credentials = await response.json();
+
+                log('✅ Credentials received!', 'success');
+                log(`LiveKit URL: ${credentials.livekit_url}`, 'info');
+                log(`Room: ${credentials.room_name}`, 'info');
+                log(`Participant: ${credentials.participant_identity}`, 'info');
+
+                // Display credentials
+                const credDiv = document.getElementById('credentialsDisplay');
+                credDiv.innerHTML = `
+                    <h4>✅ Credentials Retrieved</h4>
+                    <p><strong>LiveKit URL:</strong> <code>${credentials.livekit_url}</code></p>
+                    <p><strong>Room:</strong> <code>${credentials.room_name}</code></p>
+                    <p><strong>Expires in:</strong> ${credentials.expires_in} seconds</p>
+                `;
+                credDiv.style.display = 'block';
+
+                // Enable start call button
+                document.getElementById('startCall').style.display = 'block';
+                btn.style.display = 'none';
+
+                updateStatus('✅ Ready', 'Click "Start Voice Call" to begin');
+
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+                updateStatus('❌ Error', error.message);
+                btn.disabled = false;
+                btn.textContent = 'Step 1: Get Credentials (Retry)';
+            }
+        }
+
+        async function startCall() {
+            if (!credentials) {
+                log('❌ No credentials available', 'error');
+                return;
+            }
+
+            log('Starting voice call...', 'info');
+            updateStatus('⏳ Connecting', 'Connecting to LiveKit room...');
+
+            const btn = document.getElementById('startCall');
+            btn.disabled = true;
+            btn.textContent = 'Connecting...';
+
+            try {
+                // Create new room
+                room = new LiveKit.Room();
+
+                log('LiveKit Room created', 'success');
+
+                // Set up event handlers
+                room.on(LiveKit.RoomEvent.Connected, () => {
+                    log('✅ Connected to room!', 'success');
+                    updateStatus('🎤 Connected', 'Voice agent is ready - start speaking!');
+                });
+
+                room.on(LiveKit.RoomEvent.Disconnected, () => {
+                    log('Disconnected from room', 'warning');
+                    updateStatus('Disconnected', 'Call ended');
+                    document.getElementById('startCall').style.display = 'block';
+                    document.getElementById('endCall').style.display = 'none';
+                });
+
+                room.on(LiveKit.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                    log(`📡 Track subscribed: ${track.kind} from ${participant.identity}`, 'success');
+
+                    if (track.kind === LiveKit.Track.Kind.Audio) {
+                        log('🔊 Agent audio track received - you should hear the agent!', 'success');
+                        const audioElement = track.attach();
+                        document.body.appendChild(audioElement);
+                        audioElement.play().catch(e => log(`Audio play error: ${e.message}`, 'error'));
+                    }
+                });
+
+                room.on(LiveKit.RoomEvent.DataReceived, (payload, participant) => {
+                    const message = new TextDecoder().decode(payload);
+                    log(`💬 Message from agent: ${message}`, 'info');
+                });
+
+                room.on(LiveKit.RoomEvent.ParticipantConnected, (participant) => {
+                    log(`👤 Participant joined: ${participant.identity}`, 'info');
+                });
+
+                // Connect to room
+                log('Connecting to LiveKit...', 'info');
+                await room.connect(credentials.livekit_url, credentials.token);
+
+                log('✅ Connected to LiveKit room!', 'success');
+
+                // Enable microphone
+                log('Enabling microphone...', 'info');
+                await room.localParticipant.setMicrophoneEnabled(true);
+
+                log('🎤 Microphone enabled - you can now speak!', 'success');
+                log('Say: "I want to return my headphones to Amazon"', 'info');
+
+                updateStatus('✅ Live!', 'Speak to the agent now');
+
+                btn.style.display = 'none';
+                document.getElementById('endCall').style.display = 'block';
+
+            } catch (error) {
+                log(`❌ Connection error: ${error.message}`, 'error');
+                console.error('Full error:', error);
+                updateStatus('❌ Error', error.message);
+                btn.disabled = false;
+                btn.textContent = 'Step 2: Start Voice Call (Retry)';
+            }
+        }
+
+        async function endCall() {
+            if (room) {
+                log('Ending call...', 'info');
+                await room.disconnect();
+                room = null;
+                updateStatus('Disconnected', 'Call ended');
+                document.getElementById('startCall').style.display = 'block';
+                document.getElementById('endCall').style.display = 'none';
+            }
+        }
+
+        // Initial log
+        log('Vocal Bridge Test Interface Loaded', 'success');
+        log('Ready to test voice agent integration', 'info');
+    </script>
+</body>
+</html>
