@@ -42,8 +42,9 @@ class VocalBridgeClient:
 
     def _get_headers(self) -> Dict[str, str]:
         """Get HTTP headers for API requests."""
+        # VocalBridge uses X-API-Key header (recommended method)
         return {
-            "Authorization": f"Bearer {self.api_key}",
+            "X-API-Key": self.api_key,
             "Content-Type": "application/json",
         }
 
@@ -83,28 +84,34 @@ class VocalBridgeClient:
         try:
             import requests
 
+            # VocalBridge STT endpoint
             url = f"{self.endpoint}/speech-to-text"
 
-            files = {
-                'audio': ('audio.' + format, audio_data, f'audio/{format}')
+            headers = {
+                "X-API-Key": self.api_key,
+                "Content-Type": f"audio/{format}",
             }
 
-            data = {
-                'language': language,
-            }
-
+            # Send audio data
             response = requests.post(
                 url,
-                headers={"Authorization": f"Bearer {self.api_key}"},
-                files=files,
-                data=data,
+                headers=headers,
+                data=audio_data,
+                params={'language': language},
                 timeout=30
             )
 
             response.raise_for_status()
             result = response.json()
 
-            return result.get('text', '')
+            # Extract transcript from response
+            # Adjust this based on actual VocalBridge response format
+            if 'transcript' in result:
+                return result['transcript']
+            elif 'text' in result:
+                return result['text']
+            else:
+                return result.get('transcription', '')
 
         except ImportError:
             raise ImportError(
@@ -147,7 +154,13 @@ class VocalBridgeClient:
         try:
             import requests
 
+            # VocalBridge TTS endpoint
             url = f"{self.endpoint}/text-to-speech"
+
+            headers = {
+                "X-API-Key": self.api_key,
+                "Content-Type": "application/json",
+            }
 
             payload = {
                 'text': text,
@@ -157,13 +170,14 @@ class VocalBridgeClient:
 
             response = requests.post(
                 url,
-                headers=self._get_headers(),
+                headers=headers,
                 json=payload,
                 timeout=30
             )
 
             response.raise_for_status()
 
+            # Return audio bytes
             return response.content
 
         except ImportError:
