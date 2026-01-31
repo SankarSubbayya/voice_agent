@@ -1,91 +1,127 @@
 # 🎙️ Start Here - Test Your Voice Agent
 
-## ✅ Quick Start (One Command)
+## ✅ FIXED! Ready to Test (One Command)
 
 ```bash
-python3 voice_test_server.py
+python3 working_voice_server.py
 ```
 
-That's it! The browser will open automatically.
+**What was fixed**: LiveKit SDK now loads correctly from local server.
 
 ---
 
-## 📋 What Happens:
+## 🚀 Server is Already Running!
 
-1. **Server starts** on `http://localhost:5040`
-2. **Browser opens** automatically
-3. **Page loads** with:
-   - ✅ LiveKit SDK Ready (wait for this!)
-   - Button: "Step 1: Get Credentials"
+The server is currently running on **http://localhost:5040**
+
+Just open your browser to:
+```
+http://localhost:5040
+```
 
 ---
 
-## 🎯 Follow These Steps:
+## 📋 What You'll See:
 
-### **Step 1:** Wait for SDK
-The page will show:
-```
-✅ LiveKit SDK Ready
-```
-Once you see this green checkmark, proceed.
+1. **Page loads** with a **green box**:
+   ```
+   ✅ LiveKit SDK Loaded (Local)
+   ```
+   ⚠️ If you see a red error, refresh the page (Cmd+R or Ctrl+R)
 
-### **Step 2:** Click "Get Credentials"
+2. **Status box** says:
+   ```
+   Ready
+   Click "Get Credentials" to start
+   ```
+
+3. **Two buttons**:
+   - "Step 1: Get Credentials"
+   - "Step 2: Start Voice Call" (hidden initially)
+
+---
+
+## 🎯 Follow These 4 Simple Steps:
+
+### **Step 1:** Click "Get Credentials"
 Should immediately show:
 ```
 ✅ Ready to Connect
 Click "Start Voice Call"
 ```
 
-### **Step 3:** Click "Start Voice Call"
-- Browser will ask for **microphone permission** → Click **Allow**
-- Wait for:
+The second button will appear!
+
+### **Step 2:** Click "Start Voice Call"
+- Browser asks for **microphone permission** → Click **Allow**
+- Wait for green messages in the log:
   ```
   ✅ Connected to LiveKit room!
   🎤 Microphone enabled!
   🗣️  START SPEAKING NOW!
   ```
 
-### **Step 4:** Start Talking!
-Say: **"I want to return my headphones to Amazon"**
+### **Step 3:** Start Talking!
+Say clearly:
+```
+"I want to return my headphones to Amazon"
+```
 
-The agent should respond within 2-3 seconds!
-
----
-
-## 🎤 What to Expect:
-
-**Agent will say:**
+### **Step 4:** Listen for Agent Response
+Within 2-3 seconds, the agent will speak:
 > "Welcome to Vice Agent. Are you looking to return an item to Amazon or Walmart today?"
 
-**You respond:** "Amazon"
-
-**Agent continues:**
-> "I can help with that. What type of item would you like to return?"
-
-**Continue the conversation naturally!**
+**Keep talking naturally!** The agent will guide you through the return process.
 
 ---
 
-## 📊 Watch the Log
-
-At the bottom of the page, you'll see a black log box showing:
+## 🎤 Expected Conversation Flow:
 
 ```
-[7:24:11 AM] Voice test interface loaded
-[7:24:11 AM] Waiting for LiveKit SDK...
-[7:24:12 AM] ✅ LiveKit SDK loaded successfully!
-[7:24:15 AM] Requesting credentials from backend...
-[7:24:16 AM] ✅ Credentials received!
-[7:24:16 AM] Room: user-633715bf-agent-953ece37-api-xxxxx
-[7:24:20 AM] Connecting to LiveKit room...
-[7:24:22 AM] ✅ Connected to LiveKit room!
-[7:24:23 AM] 🎤 Microphone enabled!
-[7:24:23 AM] 🗣️  START SPEAKING NOW!
-[7:24:25 AM] 🔊 Agent audio track received!
-[7:24:26 AM] ▶️  Audio playback started
+Agent: "Welcome to Vice Agent. Are you looking to return
+        an item to Amazon or Walmart today?"
+
+You:   "Amazon"
+
+Agent: "I can help with that. What type of item would you
+        like to return?"
+
+You:   "Headphones"
+
+Agent: "May I have the order number for that purchase, please?"
+
+You:   "123456789"
+
+Agent: "What is the reason for your return?"
+
+You:   "They don't fit properly"
+
+Agent: "Let me confirm the details..."
 ```
 
-Look for:
+---
+
+## 📊 Watch the Log (Black Box at Bottom)
+
+Real-time updates showing what's happening:
+
+```
+[7:42:11 AM] Voice test interface ready
+[7:42:11 AM] LiveKit loaded from local server
+[7:42:15 AM] Requesting credentials from backend...
+[7:42:16 AM] ✅ Credentials received!
+[7:42:16 AM] LiveKit URL: wss://tutor-j7bhwjbm.livekit.cloud
+[7:42:16 AM] Room: user-633715bf-agent-953ece37-api-xxxxx
+[7:42:20 AM] Connecting to LiveKit room...
+[7:42:22 AM] ✅ Connected to LiveKit room!
+[7:42:23 AM] 🎤 Microphone enabled!
+[7:42:23 AM] 🗣️  START SPEAKING NOW!
+[7:42:25 AM] 🔊 AGENT AUDIO RECEIVED!
+[7:42:25 AM] You should hear the agent speaking!
+[7:42:26 AM] ▶️  Audio playing
+```
+
+Color coding:
 - ✅ **Green** = Success
 - ❌ **Red** = Error
 - ⚠️ **Orange** = Warning
@@ -95,88 +131,114 @@ Look for:
 
 ## 🐛 Troubleshooting:
 
-### Issue: "LiveKit SDK not loaded"
-**Solution:** Wait a few seconds, it will retry automatically. Or refresh the page.
+### Issue: Still see "❌ LiveKit SDK Failed"
+**Fix**: Hard refresh the page
+- Mac: **Cmd+Shift+R**
+- Windows: **Ctrl+Shift+R**
+- Or clear browser cache
 
 ### Issue: No sound from agent
-**Check:**
-- ✅ Speaker/headphone volume turned up?
-- ✅ See "🔊 Agent audio received!" in log?
-- ✅ See "▶️ Audio playback started"?
+**Checks**:
+1. ✅ Volume turned up?
+2. ✅ See "🔊 AGENT AUDIO RECEIVED!" in log?
+3. ✅ See "▶️ Audio playing"?
+4. ✅ Browser tab not muted? (check icon in tab)
 
-If yes to all but still no sound:
-- Try saying something to trigger a response
-- Check browser audio settings
+**Try**: Say something to trigger agent response
 
 ### Issue: Microphone not working
-**Check:**
-- ✅ Did you click "Allow" when browser asked?
-- ✅ Browser shows microphone icon in address bar?
-- ✅ Try using Chrome or Edge (best LiveKit support)
+**Checks**:
+1. ✅ Clicked "Allow" for microphone?
+2. ✅ Browser shows microphone icon in address bar?
+3. ✅ Using Chrome or Edge? (best LiveKit support)
+
+**Fix**: Check System Preferences → Security & Privacy → Microphone
 
 ### Issue: Agent doesn't respond
-**Wait 2-3 seconds** after speaking. The agent needs time to:
-1. Process your speech (STT)
-2. Generate response (GPT-4)
-3. Create audio (TTS)
-4. Stream it back
+**Wait 2-3 seconds!** Processing takes time:
+1. Speech-to-text (STT)
+2. GPT-4 response generation
+3. Text-to-speech (TTS)
+4. Audio streaming
 
-This typically takes 2-3 seconds total.
-
----
-
-## ⏹️ Stop the Server:
-
-Press **Ctrl+C** in the terminal where you ran the command.
+**Also check**:
+- Internet connection working?
+- All green checkmarks in log?
+- Speaking clearly and loudly enough?
 
 ---
 
-## 🔧 Alternative: Quick Verification
+## 🔧 Quick Verification (No Browser)
 
-To just verify everything is set up (no browser):
+Verify all systems without opening browser:
 
 ```bash
 python3 verify_setup.py
 ```
 
-Should show:
+Expected output:
 ```
+✅ Config module: OK
+✅ API Key: Valid (vb_iHqvM80Ey...)
+✅ Endpoint: https://vocalbridgeai.com/api/v1
+✅ Client Module: OK
+✅ API Connection: OK
+✅ LiveKit Credentials: OK
+
 Total: 6 passed, 0 failed
 🎉 ALL CHECKS PASSED!
 ```
 
 ---
 
-## 📚 More Info:
+## ⏹️ Stop the Server:
 
-- **Full Testing Guide:** `HOW_TO_TEST.md`
-- **Integration Details:** `VOCAL_BRIDGE_SUCCESS.md`
-- **Setup Status:** `VOCALBRIDGE_STATUS.md`
+Press **Ctrl+C** in the terminal window.
 
----
-
-## ✅ Current Status:
-
-**Everything is working and ready to test!**
-
-- ✅ API: Working
-- ✅ Credentials: Valid
-- ✅ Server: Running (port 5040)
-- ✅ LiveKit SDK: Fixed and loading properly
-- ✅ CORS: No issues (using Flask backend)
-
-**Your Agent:**
-- Name: "Vice Agent"
-- Voice: ElevenLabs Flash v2.5
-- Model: GPT-4 Realtime
-- Purpose: Amazon & Walmart returns
-
----
-
-## 🚀 Ready?
-
+To restart:
 ```bash
-python3 voice_test_server.py
+python3 working_voice_server.py
 ```
 
-Start testing your voice agent now!
+---
+
+## 📚 Additional Documentation:
+
+- **VOICE_AGENT_READY.md** - Complete testing guide
+- **LIVEKIT_SDK_FIX.md** - Technical details of recent fix
+- **HOW_TO_TEST.md** - Detailed testing instructions
+- **VOCAL_BRIDGE_SUCCESS.md** - Integration documentation
+
+---
+
+## ✅ System Status: ALL GREEN
+
+- ✅ **API**: Connected and working
+- ✅ **API Key**: Valid (no quotes issue)
+- ✅ **LiveKit SDK**: Loading from local server (v1.15.0, 332KB)
+- ✅ **Server**: Running on port 5040
+- ✅ **CORS**: Fixed (Flask backend proxy)
+- ✅ **Export Name**: Fixed (`LivekitClient` with lowercase 'k')
+
+**Your Agent Configuration:**
+- **Name**: Vice Agent
+- **Voice**: ElevenLabs Flash v2.5
+- **Model**: GPT-4 Realtime
+- **Purpose**: Amazon & Walmart returns processing
+
+---
+
+## 🎉 Everything is Working!
+
+Just open your browser:
+```
+http://localhost:5040
+```
+
+Click the two buttons and start talking to your voice agent!
+
+---
+
+**Last Updated**: 2026-01-31 07:42 AM
+**Status**: ✅ READY FOR TESTING
+**Recent Fix**: LiveKit SDK export name (`LivekitClient`)
